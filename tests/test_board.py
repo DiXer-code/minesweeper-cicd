@@ -107,6 +107,7 @@ class ChordTests(unittest.TestCase):
 
 
 # neighbor flag count tests included
+# neighbor flag count tests included
 if __name__ == "__main__":
     unittest.main()
 
