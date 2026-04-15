@@ -1,17 +1,17 @@
-import pygame
+﻿import pygame
 
 from .board import Board
 from . import settings
 
 NUMBER_COLORS = {
-    1: (0, 0, 255),       # Синій
-    2: (0, 128, 0),       # Зелений
-    3: (255, 0, 0),       # Червоний
-    4: (0, 0, 128),       # Темно-синій
-    5: (128, 0, 0),       # Бордовий
-    6: (0, 128, 128),     # Бірюзовий
-    7: (0, 0, 0),         # Чорний
-    8: (128, 128, 128)    # Сірий
+    1: (0, 0, 255),       # РЎРёРЅС–Р№
+    2: (0, 128, 0),       # Р—РµР»РµРЅРёР№
+    3: (255, 0, 0),       # Р§РµСЂРІРѕРЅРёР№
+    4: (0, 0, 128),       # РўРµРјРЅРѕ-СЃРёРЅС–Р№
+    5: (128, 0, 0),       # Р‘РѕСЂРґРѕРІРёР№
+    6: (0, 128, 128),     # Р‘С–СЂСЋР·РѕРІРёР№
+    7: (0, 0, 0),         # Р§РѕСЂРЅРёР№
+    8: (128, 128, 128)    # РЎС–СЂРёР№
 }
 
 class Game:
@@ -59,12 +59,12 @@ class Game:
 
     def _draw_cell(self, cell, x, y, rect):
         if cell.is_revealed:
-            # Відкрита клітинка
+            # Р’С–РґРєСЂРёС‚Р° РєР»С–С‚РёРЅРєР°
             pygame.draw.rect(self.screen, (220, 220, 220), rect)
             self._draw_revealed_content(cell, x, y, rect)
             pygame.draw.rect(self.screen, (150, 150, 150), rect, 1)
         else:
-            # Закрита клітинка 3D
+            # Р—Р°РєСЂРёС‚Р° РєР»С–С‚РёРЅРєР° 3D
             pygame.draw.rect(self.screen, (190, 190, 190), rect)
             pygame.draw.line(self.screen, (255, 255, 255), rect.topleft, rect.topright, 2)
             pygame.draw.line(self.screen, (255, 255, 255), rect.topleft, rect.bottomleft, 2)
@@ -104,10 +104,10 @@ class Game:
             self.time_elapsed = (pygame.time.get_ticks() - self.start_time) // 1000
 
         if self.game_over:
-            message = f"Виграш! Час: {self.time_elapsed}с (R - Рестарт)" if self.win else f"Поразка! Час: {self.time_elapsed}с (R - Рестарт)"
+            message = f"Р’РёРіСЂР°С€! Р§Р°СЃ: {self.time_elapsed}СЃ (R - Р РµСЃС‚Р°СЂС‚)" if self.win else f"РџРѕСЂР°Р·РєР°! Р§Р°СЃ: {self.time_elapsed}СЃ (R - Р РµСЃС‚Р°СЂС‚)"
             color = (0, 150, 0) if self.win else (200, 0, 0)
         else:
-            message = f"Прапорці: {self.board.count_flags()} / {settings.MINES} | Час: {self.time_elapsed}с"
+            message = f"РџСЂР°РїРѕСЂС†С–: {self.board.count_flags()} / {settings.MINES} | Р§Р°СЃ: {self.time_elapsed}СЃ"
             color = (30, 30, 30)
 
         text = self.font.render(message, True, color)
@@ -197,29 +197,29 @@ class Game:
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
                     self.reset()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1: # Лівий клік
+                    if event.button == 1: # Р›С–РІРёР№ РєР»С–Рє
                         x, y = event.pos
-                        # Перевіряємо, чи клік був по ігровому полю (а не по статус-бару)
+                        # РџРµСЂРµРІС–СЂСЏС”РјРѕ, С‡Рё РєР»С–Рє Р±СѓРІ РїРѕ С–РіСЂРѕРІРѕРјСѓ РїРѕР»СЋ (Р° РЅРµ РїРѕ СЃС‚Р°С‚СѓСЃ-Р±Р°СЂСѓ)
                         if y < settings.ROWS * settings.CELL_SIZE:
                             col = x // settings.CELL_SIZE
                             row = y // settings.CELL_SIZE
                             current_cell = (row, col)
                             current_time = pygame.time.get_ticks()
 
-                            # Якщо це та сама клітинка і пройшло менше 300мс — це подвійний клік!
+                            # РЇРєС‰Рѕ С†Рµ С‚Р° СЃР°РјР° РєР»С–С‚РёРЅРєР° С– РїСЂРѕР№С€Р»Рѕ РјРµРЅС€Рµ 300РјСЃ вЂ” С†Рµ РїРѕРґРІС–Р№РЅРёР№ РєР»С–Рє!
                             if current_time - self.last_click_time < self.double_click_delay and self.last_click_cell == current_cell:
                                 self.handle_chording(event.pos)
-                                self.last_click_time = 0 # Скидаємо, щоб уникнути потрійного кліку
+                                self.last_click_time = 0 # РЎРєРёРґР°С”РјРѕ, С‰РѕР± СѓРЅРёРєРЅСѓС‚Рё РїРѕС‚СЂС–Р№РЅРѕРіРѕ РєР»С–РєСѓ
                             else:
-                                # Інакше це звичайний одинарний клік
+                                # Р†РЅР°РєС€Рµ С†Рµ Р·РІРёС‡Р°Р№РЅРёР№ РѕРґРёРЅР°СЂРЅРёР№ РєР»С–Рє
                                 self.handle_left_click(event.pos)
                                 self.last_click_time = current_time
                                 self.last_click_cell = current_cell
                         else:
-                            # Клік по нижній панелі
+                            # РљР»С–Рє РїРѕ РЅРёР¶РЅС–Р№ РїР°РЅРµР»С–
                             self.handle_left_click(event.pos)
                             
-                    elif event.button == 3: # Правий клік
+                    elif event.button == 3: # РџСЂР°РІРёР№ РєР»С–Рє
                         self.handle_right_click(event.pos)
 
             self.draw()
