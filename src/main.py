@@ -1,52 +1,56 @@
 """
 Автори: Клебанський Іван, Захарченко Артем, Маркграф Олександр, група ІПЗ-21
 Головний модуль запуску гри Сапер.
+Запускає меню вибору складності, після чого — гру.
 """
-import argparse
+import pygame
+
 from src.game import Game
+from src.menu import Menu
 import src.settings as settings
 
+DIFFICULTY_CONFIGS = {
+    'easy':   (8,  8,  10, 320, 370),
+    'normal': (10, 10, 10, 400, 450),
+    'medium': (12, 12, 20, 480, 530),
+    'hard':   (16, 16, 40, 640, 690),
+}
+
 DIFFICULTY_LABEL = {
-    'easy': 'Easy',
+    'easy':   'Easy',
     'medium': 'Medium',
     'normal': 'Normal',
-    'hard': 'Hard',
+    'hard':   'Hard',
 }
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="Гра Сапер (Minesweeper)")
-    parser.add_argument(
-        '--difficulty',
-        type=str,
-        choices=['easy', 'medium', 'normal', 'hard'],
-        default='normal',
-        help="Вибір складності гри"
-    )
-    return parser.parse_args()
-
-
-def apply_settings(args):
-    if args.difficulty == 'easy':
-        settings.ROWS, settings.COLS, settings.MINES = 8, 8, 10
-        settings.WIDTH, settings.HEIGHT = 320, 370
-    elif args.difficulty == 'medium':
-        settings.ROWS, settings.COLS, settings.MINES = 12, 12, 20
-        settings.WIDTH, settings.HEIGHT = 480, 530
-    elif args.difficulty == 'hard':
-        settings.ROWS, settings.COLS, settings.MINES = 16, 16, 40
-        settings.WIDTH, settings.HEIGHT = 640, 690
-    else:  # normal
-        settings.ROWS, settings.COLS, settings.MINES = 10, 10, 10
-        settings.WIDTH, settings.HEIGHT = 400, 450
-
-    settings.CELL_SIZE = settings.WIDTH // settings.COLS
-    settings.STATUS_BAR_HEIGHT = settings.HEIGHT - (settings.ROWS * settings.CELL_SIZE)
+def apply_settings(difficulty: str) -> None:
+    """Apply grid size, mine count and window dimensions for the chosen difficulty."""
+    rows, cols, mines, w, h = DIFFICULTY_CONFIGS[difficulty]
+    settings.ROWS, settings.COLS, settings.MINES = rows, cols, mines
+    settings.WIDTH, settings.HEIGHT = w, h
+    settings.CELL_SIZE = w // cols
+    settings.STATUS_BAR_HEIGHT = h - rows * settings.CELL_SIZE
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    apply_settings(args)
-    label = DIFFICULTY_LABEL.get(args.difficulty, 'Normal')
-    game = Game(title=f"{label} — Minesweeper")
-    game.run()
+    pygame.init()
+
+    while True:
+        # Show difficulty selection menu (fixed 420×520 window)
+        menu_screen = pygame.display.set_mode((420, 520))
+        pygame.display.set_caption("Minesweeper")
+        menu = Menu(menu_screen)
+        difficulty = menu.run()
+
+        # Apply settings and launch the game
+        apply_settings(difficulty)
+        label = DIFFICULTY_LABEL[difficulty]
+        game = Game(title=f"{label} — Minesweeper", difficulty=difficulty)
+        result = game.run()
+
+        if result == "quit":
+            break
+        # result == "menu" → loop back to difficulty selection
+
+    pygame.quit()
