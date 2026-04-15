@@ -1,4 +1,4 @@
-class Cell:
+﻿class Cell:
     """Represents a single cell on the Minesweeper board."""
 
     def __init__(self, row: int, col: int) -> None:
