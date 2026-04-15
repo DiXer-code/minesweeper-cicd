@@ -1,4 +1,4 @@
-import unittest
+﻿import unittest
 
 from src.board import Board
 from src.cell import Cell
@@ -92,7 +92,7 @@ class ChordTests(unittest.TestCase):
     def test_chord_does_not_crash_on_unrevealed_cell(self):
         board = Board()
         board.initialize(0, 0)
-        # Should silently do nothing — unrevealed cell with neighbor_mines==0
+        # Should silently do nothing вЂ” unrevealed cell with neighbor_mines==0
         board.chord_cell(0, 0)
 
     def test_iter_neighbors_corner_has_three(self):
@@ -106,5 +106,7 @@ class ChordTests(unittest.TestCase):
         self.assertEqual(len(neighbors), 8)
 
 
+# chord tests included
 if __name__ == "__main__":
     unittest.main()
+
