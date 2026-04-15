@@ -15,10 +15,10 @@ NUMBER_COLORS = {
 }
 
 class Game:
-    def __init__(self):
+    def __init__(self, title: str = "Minesweeper") -> None:
         pygame.init()
         self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
-        pygame.display.set_caption("Minesweeper")
+        pygame.display.set_caption(title)
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont(None, 32)
 
@@ -29,10 +29,9 @@ class Game:
         self.start_time = 0
         self.time_elapsed = 0
         self.playing = False
-        self.playing = False
         self.last_click_time = 0
         self.last_click_cell = None
-        self.double_click_delay = 300 
+        self.double_click_delay = 300
 
     def reset(self):
         self.board = Board()
@@ -123,8 +122,8 @@ class Game:
         if y >= settings.ROWS * settings.CELL_SIZE:
             return
 
-        col = x // settings.CELL_SIZE
-        row = y // settings.CELL_SIZE
+        col = min(x // settings.CELL_SIZE, settings.COLS - 1)
+        row = min(y // settings.CELL_SIZE, settings.ROWS - 1)
 
         cell = self.board.grid[row][col]
 
@@ -157,8 +156,8 @@ class Game:
         if y >= settings.ROWS * settings.CELL_SIZE:
             return
 
-        col = x // settings.CELL_SIZE
-        row = y // settings.CELL_SIZE
+        col = min(x // settings.CELL_SIZE, settings.COLS - 1)
+        row = min(y // settings.CELL_SIZE, settings.ROWS - 1)
         self.board.toggle_flag(row, col)
 
     def handle_chording(self, pos):
@@ -169,8 +168,8 @@ class Game:
         if y >= settings.ROWS * settings.CELL_SIZE:
             return
 
-        col = x // settings.CELL_SIZE
-        row = y // settings.CELL_SIZE
+        col = min(x // settings.CELL_SIZE, settings.COLS - 1)
+        row = min(y // settings.CELL_SIZE, settings.ROWS - 1)
 
         self.board.chord_cell(row, col)
 
