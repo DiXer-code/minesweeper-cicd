@@ -106,7 +106,8 @@ class ChordTests(unittest.TestCase):
         self.assertEqual(len(neighbors), 8)
 
 
-# chord tests included
+# neighbor flag count tests included
 if __name__ == "__main__":
     unittest.main()
+
 
