@@ -1,4 +1,4 @@
-import random
+﻿import random
 
 from .cell import Cell
 from . import settings
