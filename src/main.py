@@ -6,33 +6,47 @@ import argparse
 from src.game import Game
 import src.settings as settings
 
+DIFFICULTY_LABEL = {
+    'easy': 'Easy',
+    'medium': 'Medium',
+    'normal': 'Normal',
+    'hard': 'Hard',
+}
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Гра Сапер (Minesweeper)")
     parser.add_argument(
-        '--difficulty', 
-        type=str, 
-        choices=['easy', 'normal', 'hard'], 
+        '--difficulty',
+        type=str,
+        choices=['easy', 'medium', 'normal', 'hard'],
         default='normal',
         help="Вибір складності гри"
     )
     return parser.parse_args()
 
+
 def apply_settings(args):
     if args.difficulty == 'easy':
         settings.ROWS, settings.COLS, settings.MINES = 8, 8, 10
         settings.WIDTH, settings.HEIGHT = 320, 370
+    elif args.difficulty == 'medium':
+        settings.ROWS, settings.COLS, settings.MINES = 12, 12, 20
+        settings.WIDTH, settings.HEIGHT = 480, 530
     elif args.difficulty == 'hard':
         settings.ROWS, settings.COLS, settings.MINES = 16, 16, 40
         settings.WIDTH, settings.HEIGHT = 640, 690
-    else: # normal
+    else:  # normal
         settings.ROWS, settings.COLS, settings.MINES = 10, 10, 10
         settings.WIDTH, settings.HEIGHT = 400, 450
-        
+
     settings.CELL_SIZE = settings.WIDTH // settings.COLS
     settings.STATUS_BAR_HEIGHT = settings.HEIGHT - (settings.ROWS * settings.CELL_SIZE)
+
 
 if __name__ == "__main__":
     args = parse_args()
     apply_settings(args)
-    game = Game()
+    label = DIFFICULTY_LABEL.get(args.difficulty, 'Normal')
+    game = Game(title=f"{label} — Minesweeper")
     game.run()
