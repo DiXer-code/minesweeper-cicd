@@ -125,3 +125,4 @@ class Game:
             self.draw()
 
         pygame.quit()
+# TODO: improve UI rendering
