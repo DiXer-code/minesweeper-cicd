@@ -3,6 +3,16 @@ import pygame
 from .board import Board
 from .settings import CELL_SIZE, COLS, FPS, HEIGHT, MINES, ROWS, STATUS_BAR_HEIGHT, WIDTH
 
+NUMBER_COLORS = {
+    1: (0, 0, 255),       # Синій
+    2: (0, 128, 0),       # Зелений
+    3: (255, 0, 0),       # Червоний
+    4: (0, 0, 128),       # Темно-синій
+    5: (128, 0, 0),       # Бордовий
+    6: (0, 128, 128),     # Бірюзовий
+    7: (0, 0, 0),         # Чорний
+    8: (128, 128, 128)    # Сірий
+}
 
 class Game:
     def __init__(self):
@@ -49,10 +59,15 @@ class Game:
 
     def _draw_revealed_content(self, cell, x, y, rect):
         if cell.is_mine:
-            pygame.draw.circle(self.screen, (255, 0, 0), rect.center, CELL_SIZE // 4)
+            # Червоний фон для міни і чорне коло
+            pygame.draw.rect(self.screen, (255, 100, 100), rect)
+            pygame.draw.circle(self.screen, (0, 0, 0), rect.center, CELL_SIZE // 4)
         elif cell.neighbor_mines > 0:
-            text = self.font.render(str(cell.neighbor_mines), True, (0, 0, 255))
-            self.screen.blit(text, (x + CELL_SIZE // 3, y + CELL_SIZE // 4))
+            color = NUMBER_COLORS.get(cell.neighbor_mines, (0, 0, 0))
+            text = self.font.render(str(cell.neighbor_mines), True, color)
+            # Вирівнювання по центру
+            text_rect = text.get_rect(center=rect.center)
+            self.screen.blit(text, text_rect)
 
     def _draw_flag(self, x, y):
         text = self.font.render("F", True, (255, 140, 0))
