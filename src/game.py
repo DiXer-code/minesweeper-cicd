@@ -1,6 +1,7 @@
 import pygame
-from board import Board
-from settings import WIDTH, HEIGHT, ROWS, COLS, CELL_SIZE, FPS
+
+from .board import Board
+from .settings import CELL_SIZE, COLS, FPS, HEIGHT, ROWS, WIDTH
 
 
 class Game:

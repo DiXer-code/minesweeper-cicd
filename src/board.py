@@ -1,6 +1,7 @@
 import random
-from cell import Cell
-from settings import ROWS, COLS, MINES
+
+from .cell import Cell
+from .settings import COLS, MINES, ROWS
 
 
 class Board:
@@ -26,7 +27,7 @@ class Board:
                     continue
                 self.grid[r][c].neighbor_mines = self.count_neighbor_mines(r, c)
 
-    def count_neighbor_mines(self, row, col):
+    def count_neighbor_mines(self, row: int, col: int) -> int:
         count = 0
         for r in range(max(0, row - 1), min(ROWS, row + 2)):
             for c in range(max(0, col - 1), min(COLS, col + 2)):
