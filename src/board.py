@@ -1,12 +1,11 @@
 import random
 
 from .cell import Cell
-from .settings import COLS, MINES, ROWS
-
+from . import settings
 
 class Board:
     def __init__(self):
-        self.grid = [[Cell(r, c) for c in range(COLS)] for r in range(ROWS)]
+        self.grid = [[Cell(r, c) for c in range(settings.COLS)] for r in range(settings.ROWS)]
         self.initialized = False
 
     def initialize(self, first_row: int, first_col: int):
@@ -18,9 +17,9 @@ class Board:
 
     def place_mines(self, excluded_row: int, excluded_col: int):
         positions = set()
-        while len(positions) < MINES:
-            r = random.randint(0, ROWS - 1)
-            c = random.randint(0, COLS - 1)
+        while len(positions) < settings.MINES:
+            r = random.randint(0, settings.ROWS - 1)
+            c = random.randint(0, settings.COLS - 1)
             if (r, c) == (excluded_row, excluded_col):
                 continue
             positions.add((r, c))
@@ -29,16 +28,16 @@ class Board:
             self.grid[r][c].is_mine = True
 
     def calculate_numbers(self):
-        for r in range(ROWS):
-            for c in range(COLS):
+        for r in range(settings.ROWS):
+            for c in range(settings.COLS):
                 if self.grid[r][c].is_mine:
                     continue
                 self.grid[r][c].neighbor_mines = self.count_neighbor_mines(r, c)
 
     def count_neighbor_mines(self, row: int, col: int) -> int:
         count = 0
-        for r in range(max(0, row - 1), min(ROWS, row + 2)):
-            for c in range(max(0, col - 1), min(COLS, col + 2)):
+        for r in range(max(0, row - 1), min(settings.ROWS, row + 2)):
+            for c in range(max(0, col - 1), min(settings.COLS, col + 2)):
                 if (r, c) != (row, col) and self.grid[r][c].is_mine:
                     count += 1
         return count
@@ -55,8 +54,8 @@ class Board:
             return
 
         if cell.neighbor_mines == 0:
-            for r in range(max(0, row - 1), min(ROWS, row + 2)):
-                for c in range(max(0, col - 1), min(COLS, col + 2)):
+            for r in range(max(0, row - 1), min(settings.ROWS, row + 2)):
+                for c in range(max(0, col - 1), min(settings.COLS, col + 2)):
                     if not self.grid[r][c].is_revealed:
                         self.reveal_cell(r, c)
 

@@ -1,7 +1,7 @@
 import pygame
 
 from .board import Board
-from .settings import CELL_SIZE, COLS, FPS, HEIGHT, MINES, ROWS, STATUS_BAR_HEIGHT, WIDTH
+from . import settings
 
 NUMBER_COLORS = {
     1: (0, 0, 255),       # Синій
@@ -17,7 +17,7 @@ NUMBER_COLORS = {
 class Game:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen = pygame.display.set_mode((settings.WIDTH, settings.HEIGHT))
         pygame.display.set_caption("Minesweeper")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont(None, 32)
@@ -41,12 +41,12 @@ class Game:
     def draw(self):
         self.screen.fill((200, 200, 200))
 
-        for r in range(ROWS):
-            for c in range(COLS):
+        for r in range(settings.ROWS):
+            for c in range(settings.COLS):
                 cell = self.board.grid[r][c]
-                x = c * CELL_SIZE
-                y = r * CELL_SIZE
-                rect = pygame.Rect(x, y, CELL_SIZE, CELL_SIZE)
+                x = c * settings.CELL_SIZE
+                y = r * settings.CELL_SIZE
+                rect = pygame.Rect(x, y, settings.CELL_SIZE, settings.CELL_SIZE)
                 self._draw_cell(cell, x, y, rect)
 
         self.draw_status()
@@ -54,12 +54,12 @@ class Game:
 
     def _draw_cell(self, cell, x, y, rect):
         if cell.is_revealed:
-            # Відкрита клітинка: плоска, трохи світліша
+            # Відкрита клітинка
             pygame.draw.rect(self.screen, (220, 220, 220), rect)
             self._draw_revealed_content(cell, x, y, rect)
-            pygame.draw.rect(self.screen, (150, 150, 150), rect, 1) # Тонка рамка
+            pygame.draw.rect(self.screen, (150, 150, 150), rect, 1)
         else:
-            # Закрита клітинка: 3D ефект (світлі верхній/лівий краї, темні нижній/правий)
+            # Закрита клітинка 3D
             pygame.draw.rect(self.screen, (190, 190, 190), rect)
             pygame.draw.line(self.screen, (255, 255, 255), rect.topleft, rect.topright, 2)
             pygame.draw.line(self.screen, (255, 255, 255), rect.topleft, rect.bottomleft, 2)
@@ -71,35 +71,30 @@ class Game:
 
     def _draw_revealed_content(self, cell, x, y, rect):
         if cell.is_mine:
-            # Червоний фон для міни і чорне коло
             pygame.draw.rect(self.screen, (255, 100, 100), rect)
-            pygame.draw.circle(self.screen, (0, 0, 0), rect.center, CELL_SIZE // 4)
+            pygame.draw.circle(self.screen, (0, 0, 0), rect.center, settings.CELL_SIZE // 4)
         elif cell.neighbor_mines > 0:
             color = NUMBER_COLORS.get(cell.neighbor_mines, (0, 0, 0))
             text = self.font.render(str(cell.neighbor_mines), True, color)
-            # Вирівнювання по центру
             text_rect = text.get_rect(center=rect.center)
             self.screen.blit(text, text_rect)
 
     def _draw_flag(self, rect):
-        # Малюємо держак прапорця (чорний)
-        pole_rect = pygame.Rect(rect.centerx - 2, rect.top + CELL_SIZE // 4, 4, CELL_SIZE // 2)
+        pole_rect = pygame.Rect(rect.centerx - 2, rect.top + settings.CELL_SIZE // 4, 4, settings.CELL_SIZE // 2)
         pygame.draw.rect(self.screen, (0, 0, 0), pole_rect)
         
-        # Малюємо полотно прапорця (червоне)
         flag_points = [
-            (rect.centerx + 2, rect.top + CELL_SIZE // 4),
-            (rect.centerx + CELL_SIZE // 3, rect.top + CELL_SIZE // 3 + 2),
-            (rect.centerx + 2, rect.top + CELL_SIZE // 2)
+            (rect.centerx + 2, rect.top + settings.CELL_SIZE // 4),
+            (rect.centerx + settings.CELL_SIZE // 3, rect.top + settings.CELL_SIZE // 3 + 2),
+            (rect.centerx + 2, rect.top + settings.CELL_SIZE // 2)
         ]
         pygame.draw.polygon(self.screen, (255, 0, 0), flag_points)
 
     def draw_status(self):
-        status_rect = pygame.Rect(0, ROWS * CELL_SIZE, WIDTH, STATUS_BAR_HEIGHT)
+        status_rect = pygame.Rect(0, settings.ROWS * settings.CELL_SIZE, settings.WIDTH, settings.STATUS_BAR_HEIGHT)
         pygame.draw.rect(self.screen, (210, 210, 210), status_rect)
         pygame.draw.line(self.screen, (128, 128, 128), status_rect.topleft, status_rect.topright, 3)
 
-        # Рахуємо час, якщо гра триває
         if self.playing:
             self.time_elapsed = (pygame.time.get_ticks() - self.start_time) // 1000
 
@@ -107,7 +102,7 @@ class Game:
             message = f"Виграш! Час: {self.time_elapsed}с (R - Рестарт)" if self.win else f"Поразка! Час: {self.time_elapsed}с (R - Рестарт)"
             color = (0, 150, 0) if self.win else (200, 0, 0)
         else:
-            message = f"Прапорці: {self.board.count_flags()} / {MINES} | Час: {self.time_elapsed}с"
+            message = f"Прапорці: {self.board.count_flags()} / {settings.MINES} | Час: {self.time_elapsed}с"
             color = (30, 30, 30)
 
         text = self.font.render(message, True, color)
@@ -119,11 +114,11 @@ class Game:
             return
 
         x, y = pos
-        if y >= ROWS * CELL_SIZE:
+        if y >= settings.ROWS * settings.CELL_SIZE:
             return
 
-        col = x // CELL_SIZE
-        row = y // CELL_SIZE
+        col = x // settings.CELL_SIZE
+        row = y // settings.CELL_SIZE
 
         cell = self.board.grid[row][col]
 
@@ -133,7 +128,6 @@ class Game:
         if not self.board.initialized:
             self.board.initialize(row, col)
             cell = self.board.grid[row][col]
-            # Запускаємо таймер
             self.start_time = pygame.time.get_ticks()
             self.playing = True
 
@@ -141,29 +135,29 @@ class Game:
             self.board.reveal_all_mines()
             self.game_over = True
             self.win = False
-            self.playing = False # Зупиняємо таймер
+            self.playing = False 
         else:
             self.board.reveal_cell(row, col)
             if self.board.check_win():
                 self.game_over = True
                 self.win = True
-                self.playing = False # Зупиняємо таймер
+                self.playing = False 
 
     def handle_right_click(self, pos):
         if self.game_over:
             return
 
         x, y = pos
-        if y >= ROWS * CELL_SIZE:
+        if y >= settings.ROWS * settings.CELL_SIZE:
             return
 
-        col = x // CELL_SIZE
-        row = y // CELL_SIZE
+        col = x // settings.CELL_SIZE
+        row = y // settings.CELL_SIZE
         self.board.toggle_flag(row, col)
 
     def run(self):
         while self.running:
-            self.clock.tick(FPS)
+            self.clock.tick(settings.FPS)
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -179,4 +173,3 @@ class Game:
             self.draw()
 
         pygame.quit()
-
