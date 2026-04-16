@@ -26,11 +26,17 @@ class Game:
         self.running = True
         self.game_over = False
         self.win = False
+        self.start_time = 0
+        self.time_elapsed = 0
+        self.playing = False
 
     def reset(self):
         self.board = Board()
         self.game_over = False
         self.win = False
+        self.start_time = 0
+        self.time_elapsed = 0
+        self.playing = False
 
     def draw(self):
         self.screen.fill((200, 200, 200))
@@ -90,18 +96,20 @@ class Game:
 
     def draw_status(self):
         status_rect = pygame.Rect(0, ROWS * CELL_SIZE, WIDTH, STATUS_BAR_HEIGHT)
-        # Фон статусного рядка та лінія-відділювач
         pygame.draw.rect(self.screen, (210, 210, 210), status_rect)
         pygame.draw.line(self.screen, (128, 128, 128), status_rect.topleft, status_rect.topright, 3)
 
+        # Рахуємо час, якщо гра триває
+        if self.playing:
+            self.time_elapsed = (pygame.time.get_ticks() - self.start_time) // 1000
+
         if self.game_over:
-            message = "Виграш! (R - Рестарт)" if self.win else "Поразка! (R - Рестарт)"
+            message = f"Виграш! Час: {self.time_elapsed}с (R - Рестарт)" if self.win else f"Поразка! Час: {self.time_elapsed}с (R - Рестарт)"
             color = (0, 150, 0) if self.win else (200, 0, 0)
         else:
-            message = f"Прапорці: {self.board.count_flags()} / {MINES}"
+            message = f"Прапорці: {self.board.count_flags()} / {MINES} | Час: {self.time_elapsed}с"
             color = (30, 30, 30)
 
-        # Центрування тексту у нижньому блоці
         text = self.font.render(message, True, color)
         text_rect = text.get_rect(center=status_rect.center)
         self.screen.blit(text, text_rect)
@@ -125,16 +133,21 @@ class Game:
         if not self.board.initialized:
             self.board.initialize(row, col)
             cell = self.board.grid[row][col]
+            # Запускаємо таймер
+            self.start_time = pygame.time.get_ticks()
+            self.playing = True
 
         if cell.is_mine:
             self.board.reveal_all_mines()
             self.game_over = True
             self.win = False
+            self.playing = False # Зупиняємо таймер
         else:
             self.board.reveal_cell(row, col)
             if self.board.check_win():
                 self.game_over = True
                 self.win = True
+                self.playing = False # Зупиняємо таймер
 
     def handle_right_click(self, pos):
         if self.game_over:
@@ -167,4 +180,3 @@ class Game:
 
         pygame.quit()
 
-# TODO: improve UI rendering
