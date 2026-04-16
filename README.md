@@ -41,3 +41,5 @@ python -m unittest discover -s tests -v
 3. Після завершення задач виконати merge у `main` через pull request.
 4. Додати в опис репозиторію та профілі GitHub повні ПІБ учасників.
 
+## Notes
+Minor improvements and cleanup.
