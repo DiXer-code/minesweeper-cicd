@@ -48,15 +48,20 @@ class Game:
 
     def _draw_cell(self, cell, x, y, rect):
         if cell.is_revealed:
+            # Відкрита клітинка: плоска, трохи світліша
             pygame.draw.rect(self.screen, (220, 220, 220), rect)
             self._draw_revealed_content(cell, x, y, rect)
+            pygame.draw.rect(self.screen, (150, 150, 150), rect, 1) # Тонка рамка
         else:
-            pygame.draw.rect(self.screen, (180, 180, 180), rect) # Зробили закриті клітинки трохи світлішими
+            # Закрита клітинка: 3D ефект (світлі верхній/лівий краї, темні нижній/правий)
+            pygame.draw.rect(self.screen, (190, 190, 190), rect)
+            pygame.draw.line(self.screen, (255, 255, 255), rect.topleft, rect.topright, 2)
+            pygame.draw.line(self.screen, (255, 255, 255), rect.topleft, rect.bottomleft, 2)
+            pygame.draw.line(self.screen, (100, 100, 100), rect.bottomleft, rect.bottomright, 2)
+            pygame.draw.line(self.screen, (100, 100, 100), rect.topright, rect.bottomright, 2)
+            
             if cell.is_flagged:
-                self._draw_flag(rect) # Передаємо rect сюди
-                
-        # Додаємо тонку рамку
-        pygame.draw.rect(self.screen, (100, 100, 100), rect, 1)
+                self._draw_flag(rect)
 
     def _draw_revealed_content(self, cell, x, y, rect):
         if cell.is_mine:
@@ -85,15 +90,21 @@ class Game:
 
     def draw_status(self):
         status_rect = pygame.Rect(0, ROWS * CELL_SIZE, WIDTH, STATUS_BAR_HEIGHT)
-        pygame.draw.rect(self.screen, (235, 235, 235), status_rect)
+        # Фон статусного рядка та лінія-відділювач
+        pygame.draw.rect(self.screen, (210, 210, 210), status_rect)
+        pygame.draw.line(self.screen, (128, 128, 128), status_rect.topleft, status_rect.topright, 3)
 
         if self.game_over:
-            message = "You Win! Press R to restart." if self.win else "Game Over! Press R to restart."
+            message = "Виграш! (R - Рестарт)" if self.win else "Поразка! (R - Рестарт)"
+            color = (0, 150, 0) if self.win else (200, 0, 0)
         else:
-            message = f"Flags: {self.board.count_flags()}/{MINES} | Left click: open | Right click: flag | R: restart"
+            message = f"Прапорці: {self.board.count_flags()} / {MINES}"
+            color = (30, 30, 30)
 
-        text = self.font.render(message, True, (0, 0, 0))
-        self.screen.blit(text, (10, HEIGHT - 35))
+        # Центрування тексту у нижньому блоці
+        text = self.font.render(message, True, color)
+        text_rect = text.get_rect(center=status_rect.center)
+        self.screen.blit(text, text_rect)
 
     def handle_left_click(self, pos):
         if self.game_over:
