@@ -51,11 +51,12 @@ class Game:
             pygame.draw.rect(self.screen, (220, 220, 220), rect)
             self._draw_revealed_content(cell, x, y, rect)
         else:
-            pygame.draw.rect(self.screen, (140, 140, 140), rect)
+            pygame.draw.rect(self.screen, (180, 180, 180), rect) # Зробили закриті клітинки трохи світлішими
             if cell.is_flagged:
-                self._draw_flag(x, y)
+                self._draw_flag(rect) # Передаємо rect сюди
                 
-        pygame.draw.rect(self.screen, (0, 0, 0), rect, 1)
+        # Додаємо тонку рамку
+        pygame.draw.rect(self.screen, (100, 100, 100), rect, 1)
 
     def _draw_revealed_content(self, cell, x, y, rect):
         if cell.is_mine:
@@ -69,9 +70,18 @@ class Game:
             text_rect = text.get_rect(center=rect.center)
             self.screen.blit(text, text_rect)
 
-    def _draw_flag(self, x, y):
-        text = self.font.render("F", True, (255, 140, 0))
-        self.screen.blit(text, (x + CELL_SIZE // 3, y + CELL_SIZE // 4))
+    def _draw_flag(self, rect):
+        # Малюємо держак прапорця (чорний)
+        pole_rect = pygame.Rect(rect.centerx - 2, rect.top + CELL_SIZE // 4, 4, CELL_SIZE // 2)
+        pygame.draw.rect(self.screen, (0, 0, 0), pole_rect)
+        
+        # Малюємо полотно прапорця (червоне)
+        flag_points = [
+            (rect.centerx + 2, rect.top + CELL_SIZE // 4),
+            (rect.centerx + CELL_SIZE // 3, rect.top + CELL_SIZE // 3 + 2),
+            (rect.centerx + 2, rect.top + CELL_SIZE // 2)
+        ]
+        pygame.draw.polygon(self.screen, (255, 0, 0), flag_points)
 
     def draw_status(self):
         status_rect = pygame.Rect(0, ROWS * CELL_SIZE, WIDTH, STATUS_BAR_HEIGHT)
