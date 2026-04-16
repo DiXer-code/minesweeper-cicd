@@ -1,7 +1,7 @@
 import pygame
 
 from .board import Board
-from .settings import CELL_SIZE, COLS, FPS, HEIGHT, ROWS, WIDTH
+from .settings import CELL_SIZE, COLS, FPS, HEIGHT, MINES, ROWS, STATUS_BAR_HEIGHT, WIDTH
 
 
 class Game:
@@ -14,6 +14,11 @@ class Game:
 
         self.board = Board()
         self.running = True
+        self.game_over = False
+        self.win = False
+
+    def reset(self):
+        self.board = Board()
         self.game_over = False
         self.win = False
 
@@ -44,12 +49,21 @@ class Game:
 
                 pygame.draw.rect(self.screen, (0, 0, 0), rect, 1)
 
-        if self.game_over:
-            message = "You Win!" if self.win else "Game Over!"
-            text = self.font.render(message, True, (0, 0, 0))
-            self.screen.blit(text, (WIDTH // 2 - 70, HEIGHT - 35))
+        self.draw_status()
 
         pygame.display.flip()
+
+    def draw_status(self):
+        status_rect = pygame.Rect(0, ROWS * CELL_SIZE, WIDTH, STATUS_BAR_HEIGHT)
+        pygame.draw.rect(self.screen, (235, 235, 235), status_rect)
+
+        if self.game_over:
+            message = "You Win! Press R to restart." if self.win else "Game Over! Press R to restart."
+        else:
+            message = f"Flags: {self.board.count_flags()}/{MINES} | Left click: open | Right click: flag | R: restart"
+
+        text = self.font.render(message, True, (0, 0, 0))
+        self.screen.blit(text, (10, HEIGHT - 35))
 
     def handle_left_click(self, pos):
         if self.game_over:
@@ -66,6 +80,10 @@ class Game:
 
         if cell.is_flagged:
             return
+
+        if not self.board.initialized:
+            self.board.initialize(row, col)
+            cell = self.board.grid[row][col]
 
         if cell.is_mine:
             self.board.reveal_all_mines()
@@ -96,6 +114,8 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                    self.reset()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         self.handle_left_click(event.pos)
