@@ -3,6 +3,16 @@ import pygame
 from .board import Board
 from .settings import CELL_SIZE, COLS, FPS, HEIGHT, MINES, ROWS, STATUS_BAR_HEIGHT, WIDTH
 
+NUMBER_COLORS = {
+    1: (0, 0, 255),       # Синій
+    2: (0, 128, 0),       # Зелений
+    3: (255, 0, 0),       # Червоний
+    4: (0, 0, 128),       # Темно-синій
+    5: (128, 0, 0),       # Бордовий
+    6: (0, 128, 128),     # Бірюзовий
+    7: (0, 0, 0),         # Чорний
+    8: (128, 128, 128)    # Сірий
+}
 
 class Game:
     def __init__(self):
@@ -31,39 +41,70 @@ class Game:
                 x = c * CELL_SIZE
                 y = r * CELL_SIZE
                 rect = pygame.Rect(x, y, CELL_SIZE, CELL_SIZE)
-
-                if cell.is_revealed:
-                    pygame.draw.rect(self.screen, (220, 220, 220), rect)
-
-                    if cell.is_mine:
-                        pygame.draw.circle(self.screen, (255, 0, 0), rect.center, CELL_SIZE // 4)
-                    elif cell.neighbor_mines > 0:
-                        text = self.font.render(str(cell.neighbor_mines), True, (0, 0, 255))
-                        self.screen.blit(text, (x + CELL_SIZE // 3, y + CELL_SIZE // 4))
-                else:
-                    pygame.draw.rect(self.screen, (140, 140, 140), rect)
-
-                    if cell.is_flagged:
-                        text = self.font.render("F", True, (255, 140, 0))
-                        self.screen.blit(text, (x + CELL_SIZE // 3, y + CELL_SIZE // 4))
-
-                pygame.draw.rect(self.screen, (0, 0, 0), rect, 1)
+                self._draw_cell(cell, x, y, rect)
 
         self.draw_status()
-
         pygame.display.flip()
+
+    def _draw_cell(self, cell, x, y, rect):
+        if cell.is_revealed:
+            # Відкрита клітинка: плоска, трохи світліша
+            pygame.draw.rect(self.screen, (220, 220, 220), rect)
+            self._draw_revealed_content(cell, x, y, rect)
+            pygame.draw.rect(self.screen, (150, 150, 150), rect, 1) # Тонка рамка
+        else:
+            # Закрита клітинка: 3D ефект (світлі верхній/лівий краї, темні нижній/правий)
+            pygame.draw.rect(self.screen, (190, 190, 190), rect)
+            pygame.draw.line(self.screen, (255, 255, 255), rect.topleft, rect.topright, 2)
+            pygame.draw.line(self.screen, (255, 255, 255), rect.topleft, rect.bottomleft, 2)
+            pygame.draw.line(self.screen, (100, 100, 100), rect.bottomleft, rect.bottomright, 2)
+            pygame.draw.line(self.screen, (100, 100, 100), rect.topright, rect.bottomright, 2)
+            
+            if cell.is_flagged:
+                self._draw_flag(rect)
+
+    def _draw_revealed_content(self, cell, x, y, rect):
+        if cell.is_mine:
+            # Червоний фон для міни і чорне коло
+            pygame.draw.rect(self.screen, (255, 100, 100), rect)
+            pygame.draw.circle(self.screen, (0, 0, 0), rect.center, CELL_SIZE // 4)
+        elif cell.neighbor_mines > 0:
+            color = NUMBER_COLORS.get(cell.neighbor_mines, (0, 0, 0))
+            text = self.font.render(str(cell.neighbor_mines), True, color)
+            # Вирівнювання по центру
+            text_rect = text.get_rect(center=rect.center)
+            self.screen.blit(text, text_rect)
+
+    def _draw_flag(self, rect):
+        # Малюємо держак прапорця (чорний)
+        pole_rect = pygame.Rect(rect.centerx - 2, rect.top + CELL_SIZE // 4, 4, CELL_SIZE // 2)
+        pygame.draw.rect(self.screen, (0, 0, 0), pole_rect)
+        
+        # Малюємо полотно прапорця (червоне)
+        flag_points = [
+            (rect.centerx + 2, rect.top + CELL_SIZE // 4),
+            (rect.centerx + CELL_SIZE // 3, rect.top + CELL_SIZE // 3 + 2),
+            (rect.centerx + 2, rect.top + CELL_SIZE // 2)
+        ]
+        pygame.draw.polygon(self.screen, (255, 0, 0), flag_points)
 
     def draw_status(self):
         status_rect = pygame.Rect(0, ROWS * CELL_SIZE, WIDTH, STATUS_BAR_HEIGHT)
-        pygame.draw.rect(self.screen, (235, 235, 235), status_rect)
+        # Фон статусного рядка та лінія-відділювач
+        pygame.draw.rect(self.screen, (210, 210, 210), status_rect)
+        pygame.draw.line(self.screen, (128, 128, 128), status_rect.topleft, status_rect.topright, 3)
 
         if self.game_over:
-            message = "You Win! Press R to restart." if self.win else "Game Over! Press R to restart."
+            message = "Виграш! (R - Рестарт)" if self.win else "Поразка! (R - Рестарт)"
+            color = (0, 150, 0) if self.win else (200, 0, 0)
         else:
-            message = f"Flags: {self.board.count_flags()}/{MINES} | Left click: open | Right click: flag | R: restart"
+            message = f"Прапорці: {self.board.count_flags()} / {MINES}"
+            color = (30, 30, 30)
 
-        text = self.font.render(message, True, (0, 0, 0))
-        self.screen.blit(text, (10, HEIGHT - 35))
+        # Центрування тексту у нижньому блоці
+        text = self.font.render(message, True, color)
+        text_rect = text.get_rect(center=status_rect.center)
+        self.screen.blit(text, text_rect)
 
     def handle_left_click(self, pos):
         if self.game_over:
@@ -125,4 +166,5 @@ class Game:
             self.draw()
 
         pygame.quit()
+
 # TODO: improve UI rendering
