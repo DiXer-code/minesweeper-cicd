@@ -31,27 +31,26 @@ class Game:
                 x = c * CELL_SIZE
                 y = r * CELL_SIZE
                 rect = pygame.Rect(x, y, CELL_SIZE, CELL_SIZE)
-
-                if cell.is_revealed:
-                    pygame.draw.rect(self.screen, (220, 220, 220), rect)
-
-                    if cell.is_mine:
-                        pygame.draw.circle(self.screen, (255, 0, 0), rect.center, CELL_SIZE // 4)
-                    elif cell.neighbor_mines > 0:
-                        text = self.font.render(str(cell.neighbor_mines), True, (0, 0, 255))
-                        self.screen.blit(text, (x + CELL_SIZE // 3, y + CELL_SIZE // 4))
-                else:
-                    pygame.draw.rect(self.screen, (140, 140, 140), rect)
-
-                    if cell.is_flagged:
-                        text = self.font.render("F", True, (255, 140, 0))
-                        self.screen.blit(text, (x + CELL_SIZE // 3, y + CELL_SIZE // 4))
-
-                pygame.draw.rect(self.screen, (0, 0, 0), rect, 1)
+                self._draw_cell(cell, x, y, rect)
 
         self.draw_status()
-
         pygame.display.flip()
+
+    def _draw_cell(self, cell, x, y, rect):
+        if cell.is_revealed:
+            pygame.draw.rect(self.screen, (220, 220, 220), rect)
+            if cell.is_mine:
+                pygame.draw.circle(self.screen, (255, 0, 0), rect.center, CELL_SIZE // 4)
+            elif cell.neighbor_mines > 0:
+                text = self.font.render(str(cell.neighbor_mines), True, (0, 0, 255))
+                self.screen.blit(text, (x + CELL_SIZE // 3, y + CELL_SIZE // 4))
+        else:
+            pygame.draw.rect(self.screen, (140, 140, 140), rect)
+            if cell.is_flagged:
+                text = self.font.render("F", True, (255, 140, 0))
+                self.screen.blit(text, (x + CELL_SIZE // 3, y + CELL_SIZE // 4))
+                
+        pygame.draw.rect(self.screen, (0, 0, 0), rect, 1)
 
     def draw_status(self):
         status_rect = pygame.Rect(0, ROWS * CELL_SIZE, WIDTH, STATUS_BAR_HEIGHT)
@@ -125,4 +124,5 @@ class Game:
             self.draw()
 
         pygame.quit()
+
 # TODO: improve UI rendering
