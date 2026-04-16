@@ -79,3 +79,28 @@ class Board:
 
     def count_flags(self) -> int:
         return sum(cell.is_flagged for row in self.grid for cell in row)
+
+    def count_neighbor_flags(self, row: int, col: int) -> int:
+        """Рахує кількість прапорців навколо вказаної клітинки."""
+        count = 0
+        for r in range(max(0, row - 1), min(settings.ROWS, row + 2)):
+            for c in range(max(0, col - 1), min(settings.COLS, col + 2)):
+                if self.grid[r][c].is_flagged:
+                    count += 1
+        return count
+
+    def chord_cell(self, row: int, col: int):
+        """Автоматично відкриває сусідів, якщо кількість прапорців збігається з цифрою."""
+        cell = self.grid[row][col]
+        
+        # Працює лише для відкритих клітинок з цифрами
+        if not cell.is_revealed or cell.neighbor_mines == 0:
+            return
+
+        # Якщо кількість прапорців навколо дорівнює цифрі в клітинці
+        if self.count_neighbor_flags(row, col) == cell.neighbor_mines:
+            for r in range(max(0, row - 1), min(settings.ROWS, row + 2)):
+                for c in range(max(0, col - 1), min(settings.COLS, col + 2)):
+                    # Відкриваємо всі закриті клітинки без прапорців
+                    if not self.grid[r][c].is_flagged and not self.grid[r][c].is_revealed:
+                        self.reveal_cell(r, c)
