@@ -7,14 +7,22 @@ from .settings import COLS, MINES, ROWS
 class Board:
     def __init__(self):
         self.grid = [[Cell(r, c) for c in range(COLS)] for r in range(ROWS)]
-        self.place_mines()
-        self.calculate_numbers()
+        self.initialized = False
 
-    def place_mines(self):
+    def initialize(self, first_row: int, first_col: int):
+        if self.initialized:
+            return
+        self.place_mines(first_row, first_col)
+        self.calculate_numbers()
+        self.initialized = True
+
+    def place_mines(self, excluded_row: int, excluded_col: int):
         positions = set()
         while len(positions) < MINES:
             r = random.randint(0, ROWS - 1)
             c = random.randint(0, COLS - 1)
+            if (r, c) == (excluded_row, excluded_col):
+                continue
             positions.add((r, c))
 
         for r, c in positions:
@@ -69,3 +77,6 @@ class Board:
                 if not cell.is_mine and not cell.is_revealed:
                     return False
         return True
+
+    def count_flags(self) -> int:
+        return sum(cell.is_flagged for row in self.grid for cell in row)
