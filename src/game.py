@@ -29,6 +29,10 @@ class Game:
         self.start_time = 0
         self.time_elapsed = 0
         self.playing = False
+        self.playing = False
+        self.last_click_time = 0
+        self.last_click_cell = None
+        self.double_click_delay = 300 
 
     def reset(self):
         self.board = Board()
@@ -37,6 +41,8 @@ class Game:
         self.start_time = 0
         self.time_elapsed = 0
         self.playing = False
+        self.last_click_time = 0
+        self.last_click_cell = None
 
     def draw(self):
         self.screen.fill((200, 200, 200))
@@ -155,6 +161,33 @@ class Game:
         row = y // settings.CELL_SIZE
         self.board.toggle_flag(row, col)
 
+    def handle_chording(self, pos):
+        if self.game_over:
+            return
+
+        x, y = pos
+        if y >= settings.ROWS * settings.CELL_SIZE:
+            return
+
+        col = x // settings.CELL_SIZE
+        row = y // settings.CELL_SIZE
+
+        self.board.chord_cell(row, col)
+
+        for r in range(settings.ROWS):
+            for c in range(settings.COLS):
+                if self.board.grid[r][c].is_revealed and self.board.grid[r][c].is_mine:
+                    self.board.reveal_all_mines()
+                    self.game_over = True
+                    self.win = False
+                    self.playing = False
+                    return
+
+        if self.board.check_win():
+            self.game_over = True
+            self.win = True
+            self.playing = False
+
     def run(self):
         while self.running:
             self.clock.tick(settings.FPS)
@@ -165,9 +198,29 @@ class Game:
                 elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
                     self.reset()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1:
-                        self.handle_left_click(event.pos)
-                    elif event.button == 3:
+                    if event.button == 1: # Лівий клік
+                        x, y = event.pos
+                        # Перевіряємо, чи клік був по ігровому полю (а не по статус-бару)
+                        if y < settings.ROWS * settings.CELL_SIZE:
+                            col = x // settings.CELL_SIZE
+                            row = y // settings.CELL_SIZE
+                            current_cell = (row, col)
+                            current_time = pygame.time.get_ticks()
+
+                            # Якщо це та сама клітинка і пройшло менше 300мс — це подвійний клік!
+                            if current_time - self.last_click_time < self.double_click_delay and self.last_click_cell == current_cell:
+                                self.handle_chording(event.pos)
+                                self.last_click_time = 0 # Скидаємо, щоб уникнути потрійного кліку
+                            else:
+                                # Інакше це звичайний одинарний клік
+                                self.handle_left_click(event.pos)
+                                self.last_click_time = current_time
+                                self.last_click_cell = current_cell
+                        else:
+                            # Клік по нижній панелі
+                            self.handle_left_click(event.pos)
+                            
+                    elif event.button == 3: # Правий клік
                         self.handle_right_click(event.pos)
 
             self.draw()
