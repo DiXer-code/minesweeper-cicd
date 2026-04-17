@@ -1,3 +1,7 @@
+"""
+Unit tests for the scores persistence module.
+"""
+
 import unittest
 import os
 import json
@@ -42,12 +46,19 @@ class ScoresTests(unittest.TestCase):
         result = scores_module.record_time("easy", 25)
         self.assertTrue(result)
 
-    def test_only_top_three_kept(self):
-        for t in [10, 20, 30, 40, 50]:
+    def test_only_top_five_kept(self):
+        # Додаємо 6 результатів
+        for t in [10, 20, 30, 40, 50, 60]:
             scores_module.record_time("hard", t)
+            
         data = scores_module.load_scores()
-        self.assertEqual(len(data["hard"]), 3)
-        self.assertEqual(data["hard"], [10, 20, 30])
+        
+        # Перевіряємо, що збереглося рівно 5 записів
+        self.assertEqual(len(data["hard"]), 5)
+        
+        # Дістаємо час із нових словників і перевіряємо, чи збереглись топ-5
+        times = [entry["time"] for entry in data["hard"]]
+        self.assertEqual(times, [10, 20, 30, 40, 50])
 
     def test_different_difficulties_are_independent(self):
         scores_module.record_time("easy", 100)
