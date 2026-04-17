@@ -7,6 +7,7 @@ import pygame
 
 from src.game import Game
 from src.menu import Menu
+from src.leaderboard import Leaderboard
 import src.settings as settings
 
 DIFFICULTY_CONFIGS = {
@@ -41,7 +42,15 @@ if __name__ == "__main__":
         menu_screen = pygame.display.set_mode((420, 520))
         pygame.display.set_caption("Minesweeper")
         menu = Menu(menu_screen)
-        difficulty = menu.run()
+        choice = menu.run()
+
+        # Handle leaderboard selection
+        if choice == "leaderboard":
+            leaderboard = Leaderboard(menu_screen)
+            leaderboard.run()
+            continue  # Return to menu
+
+        difficulty = choice
 
         # Apply settings and launch the game
         apply_settings(difficulty)

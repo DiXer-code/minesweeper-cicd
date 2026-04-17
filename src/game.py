@@ -3,6 +3,7 @@ import pygame
 from .board import Board
 from . import settings
 from . import scores as scores_module
+from .name_input import NameInputDialog
 
 NUMBER_COLORS = {
     1: (0, 0, 255),
@@ -37,6 +38,8 @@ class Game:
         self.last_click_time = 0
         self.last_click_cell = None
         self.double_click_delay = 300
+        self.player_name_entered = False
+        self.player_name = "Невідомо"
 
         self.is_new_best: bool = False
         self.best_time: int | None = scores_module.get_best_time(difficulty)
@@ -52,10 +55,12 @@ class Game:
         self.last_click_cell = None
         self.is_new_best = False
         self.best_time = scores_module.get_best_time(self.difficulty)
+        self.player_name_entered = False
+        self.player_name = "Невідомо"
 
     def _record_win(self) -> None:
-        """Save the elapsed time and update the best-time cache."""
-        self.is_new_best = scores_module.record_time(self.difficulty, self.time_elapsed)
+        """Save the elapsed time with player name and update the best-time cache."""
+        self.is_new_best = scores_module.record_time(self.difficulty, self.time_elapsed, self.player_name)
         self.best_time = scores_module.get_best_time(self.difficulty)
 
     # ── Drawing ──────────────────────────────────────────────────────────────
@@ -128,10 +133,14 @@ class Game:
 
         if self.game_over:
             if self.win:
-                best_note = " ★ НОВИЙ РЕКОРД!" if self.is_new_best \
-                    else (f"  рекорд: {self.best_time}с" if self.best_time else "")
-                message = f"Виграш! {self.time_elapsed}с{best_note}   R рестарт  M меню"
-                color = (0, 130, 0)
+                if not self.player_name_entered:
+                    message = "Введіть ім'я та натисніть Enter..."
+                    color = (0, 100, 200)
+                else:
+                    best_note = " ★ НОВИЙ РЕКОРД!" if self.is_new_best \
+                        else (f"  рекорд: {self.best_time}с" if self.best_time else "")
+                    message = f"Виграш! {self.time_elapsed}с{best_note}   R рестарт  M меню"
+                    color = (0, 130, 0)
             else:
                 message = f"Поразка! {self.time_elapsed}с   R рестарт  M меню"
                 color = (200, 0, 0)
@@ -227,6 +236,15 @@ class Game:
         """Main game loop. Returns 'menu' or 'quit'."""
         while True:
             self.clock.tick(settings.FPS)
+
+            # Handle name input for win
+            if self.game_over and self.win and not self.player_name_entered:
+                self.draw()  # Draw game state first
+                name_dialog = NameInputDialog(self.screen, self.time_elapsed, self.difficulty)
+                self.player_name = name_dialog.run()
+                self.player_name_entered = True
+                self._record_win()
+                continue  # Draw the updated status
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

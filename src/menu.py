@@ -39,7 +39,9 @@ class Menu:
         self.font_btn    = pygame.font.SysFont(None, 38)
         self.font_desc   = pygame.font.SysFont(None, 24)
         self.hovered: int = -1
+        self.leaderboard_btn_hovered = False
         self.buttons: list[pygame.Rect] = []
+        self.leaderboard_rect: pygame.Rect | None = None
         self._build_layout()
 
     def _build_layout(self) -> None:
@@ -49,9 +51,17 @@ class Menu:
             x = (MENU_W - BUTTON_W) // 2
             y = start_y + i * (BUTTON_H + GAP)
             self.buttons.append(pygame.Rect(x, y, BUTTON_W, BUTTON_H))
+        
+        # Leaderboard button at the bottom
+        self.leaderboard_rect = pygame.Rect(
+            (MENU_W - 200) // 2,
+            MENU_H - 70,
+            200,
+            50
+        )
 
     def run(self) -> str:
-        """Block until the player picks a difficulty. Returns the difficulty key."""
+        """Block until the player picks a difficulty or leaderboard. Returns 'difficulty:key' or 'leaderboard'."""
         clock = pygame.time.Clock()
         while True:
             clock.tick(60)
@@ -60,6 +70,8 @@ class Menu:
                 (i for i, r in enumerate(self.buttons) if r.collidepoint(mx, my)),
                 -1
             )
+            self.leaderboard_btn_hovered = self.leaderboard_rect.collidepoint(mx, my)
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -68,6 +80,8 @@ class Menu:
                     for i, rect in enumerate(self.buttons):
                         if rect.collidepoint(event.pos):
                             return DIFFICULTIES[i][1]
+                    if self.leaderboard_rect.collidepoint(event.pos):
+                        return "leaderboard"
             self._draw()
 
     def _draw(self) -> None:
@@ -106,6 +120,14 @@ class Menu:
                 badge = self.font_desc.render(badge_text, True,
                                               ACCENT_GOLD if hovered else TEXT_RECORD)
                 self.screen.blit(badge, badge.get_rect(midright=(rect.right - 18, rect.centery)))
+
+        # ── Leaderboard button ────────────────────────────────
+        bg_color = CARD_HOVER if self.leaderboard_btn_hovered else CARD_IDLE
+        pygame.draw.rect(self.screen, bg_color, self.leaderboard_rect, border_radius=10)
+        pygame.draw.rect(self.screen, CARD_BORDER, self.leaderboard_rect, width=1, border_radius=10)
+        
+        lb_text = self.font_desc.render("🏆 ТАБЛИЦЯ ЛІДЕРІВ", True, TEXT_WHITE if self.leaderboard_btn_hovered else TEXT_SUB)
+        self.screen.blit(lb_text, lb_text.get_rect(center=self.leaderboard_rect.center))
 
         # ── Footer hint ───────────────────────────────────────
         hint = self.font_desc.render("R – рестарт гри   |   M – повернутись до меню", True, TEXT_SUB)
