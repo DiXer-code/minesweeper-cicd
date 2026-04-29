@@ -1,70 +1,103 @@
-import unittest
-import os
-import json
-import tempfile
-
 import src.scores as scores_module
 
 
-class ScoresTests(unittest.TestCase):
-    """Unit tests for the scores persistence module."""
+def test_load_scores_returns_empty_for_missing_file(monkeypatch, tmp_path) -> None:
+    scores_file = tmp_path / "missing-scores.json"
+    monkeypatch.setattr(scores_module, "_SCORES_FILE", str(scores_file))
 
-    def setUp(self):
-        # Redirect the module to a fresh temp file for each test
-        self._tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".json", mode="w")
-        self._tmp.write("{}")
-        self._tmp.close()
-        self._orig_path = scores_module._SCORES_FILE
-        scores_module._SCORES_FILE = self._tmp.name
-
-    def tearDown(self):
-        scores_module._SCORES_FILE = self._orig_path
-        os.unlink(self._tmp.name)
-
-    def test_get_best_time_returns_none_when_empty(self):
-        self.assertIsNone(scores_module.get_best_time("normal"))
-
-    def test_record_time_stores_value(self):
-        scores_module.record_time("normal", 42)
-        self.assertEqual(scores_module.get_best_time("normal"), 42)
-
-    def test_record_time_returns_true_on_first_entry(self):
-        result = scores_module.record_time("easy", 30)
-        self.assertTrue(result)
-
-    def test_record_time_returns_false_if_slower(self):
-        scores_module.record_time("easy", 30)
-        result = scores_module.record_time("easy", 50)
-        self.assertFalse(result)
-
-    def test_record_time_returns_true_if_faster(self):
-        scores_module.record_time("easy", 50)
-        result = scores_module.record_time("easy", 25)
-        self.assertTrue(result)
-
-    def test_only_top_three_kept(self):
-        for t in [10, 20, 30, 40, 50]:
-            scores_module.record_time("hard", t)
-        data = scores_module.load_scores()
-        self.assertEqual(len(data["hard"]), 3)
-        self.assertEqual(data["hard"], [10, 20, 30])
-
-    def test_different_difficulties_are_independent(self):
-        scores_module.record_time("easy", 100)
-        scores_module.record_time("hard", 200)
-        self.assertEqual(scores_module.get_best_time("easy"), 100)
-        self.assertEqual(scores_module.get_best_time("hard"), 200)
-
-    def test_load_scores_returns_empty_on_corrupt_file(self):
-        with open(self._tmp.name, "w") as f:
-            f.write("NOT VALID JSON{{{")
-        self.assertEqual(scores_module.load_scores(), {})
-
-    def test_best_time_updates_after_new_record(self):
-        scores_module.record_time("normal", 60)
-        scores_module.record_time("normal", 30)
-        self.assertEqual(scores_module.get_best_time("normal"), 30)
+    assert scores_module.load_scores() == {}
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_load_scores_returns_empty_for_corrupt_file(monkeypatch, tmp_path) -> None:
+    scores_file = tmp_path / "scores.json"
+    scores_file.write_text("NOT VALID JSON", encoding="utf-8")
+    monkeypatch.setattr(scores_module, "_SCORES_FILE", str(scores_file))
+
+    assert scores_module.load_scores() == {}
+
+
+def test_save_scores_persists_data(monkeypatch, tmp_path) -> None:
+    scores_file = tmp_path / "scores.json"
+    monkeypatch.setattr(scores_module, "_SCORES_FILE", str(scores_file))
+    data = {"easy": [{"name": "Alice", "time": 15}]}
+
+    scores_module.save_scores(data)
+
+    assert scores_module.load_scores() == data
+
+
+def test_get_best_time_returns_none_when_difficulty_has_no_results(
+    monkeypatch,
+    tmp_path,
+) -> None:
+    scores_file = tmp_path / "scores.json"
+    scores_file.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(scores_module, "_SCORES_FILE", str(scores_file))
+
+    assert scores_module.get_best_time("normal") is None
+
+
+def test_record_time_returns_true_for_first_entry(monkeypatch, tmp_path) -> None:
+    scores_file = tmp_path / "scores.json"
+    scores_file.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(scores_module, "_SCORES_FILE", str(scores_file))
+
+    assert scores_module.record_time("easy", 30, "Alice") is True
+    assert scores_module.get_best_time("easy") == 30
+
+
+def test_record_time_returns_false_for_slower_time(monkeypatch, tmp_path) -> None:
+    scores_file = tmp_path / "scores.json"
+    scores_file.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(scores_module, "_SCORES_FILE", str(scores_file))
+    scores_module.record_time("easy", 30, "Alice")
+
+    assert scores_module.record_time("easy", 50, "Bob") is False
+    assert scores_module.get_best_time("easy") == 30
+
+
+def test_record_time_returns_true_for_new_best_time(monkeypatch, tmp_path) -> None:
+    scores_file = tmp_path / "scores.json"
+    scores_file.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(scores_module, "_SCORES_FILE", str(scores_file))
+    scores_module.record_time("easy", 50, "Alice")
+
+    assert scores_module.record_time("easy", 25, "Bob") is True
+    assert scores_module.get_best_time("easy") == 25
+
+
+def test_record_time_keeps_only_top_five_results(monkeypatch, tmp_path) -> None:
+    scores_file = tmp_path / "scores.json"
+    scores_file.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(scores_module, "_SCORES_FILE", str(scores_file))
+
+    for index, elapsed in enumerate([45, 10, 30, 20, 60, 15], start=1):
+        scores_module.record_time("hard", elapsed, f"Player {index}")
+
+    entries = scores_module.load_scores()["hard"]
+
+    assert len(entries) == 5
+    assert [entry["time"] for entry in entries] == [10, 15, 20, 30, 45]
+
+
+def test_record_time_stores_results_per_difficulty(monkeypatch, tmp_path) -> None:
+    scores_file = tmp_path / "scores.json"
+    scores_file.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(scores_module, "_SCORES_FILE", str(scores_file))
+
+    scores_module.record_time("easy", 100, "Alice")
+    scores_module.record_time("hard", 200, "Bob")
+
+    assert scores_module.get_best_time("easy") == 100
+    assert scores_module.get_best_time("hard") == 200
+
+
+def test_get_leaderboard_migrates_old_integer_format(monkeypatch, tmp_path) -> None:
+    scores_file = tmp_path / "scores.json"
+    scores_file.write_text('{"easy": [40, 20, 30]}', encoding="utf-8")
+    monkeypatch.setattr(scores_module, "_SCORES_FILE", str(scores_file))
+
+    leaderboard = scores_module.get_leaderboard("easy")
+
+    assert [entry["time"] for entry in leaderboard] == [20, 30, 40]
+    assert all(entry["name"] for entry in leaderboard)
