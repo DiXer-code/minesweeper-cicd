@@ -1,60 +1,68 @@
-# Minesweeper CI/CD
+﻿# Minesweeper CI/CD
 
-Навчальний проєкт гри "Сапер" на `pygame`.
+Academic Minesweeper project built with `pygame`.
 
-## Стан виконання вимог
+## What is implemented
 
-1. Формування команди: не перевіряється кодом, потрібно підтвердити склад команди окремо.
-2. Аналіз гри та діаграма варіантів використання: виконано, див. [docs/analysis.md](docs/analysis.md).
-3. Проєктування гри, діаграми діяльності та класів: виконано, див. [docs/design.md](docs/design.md).
-4. Розподіл задач і планування: виконано, див. [docs/team-plan.md](docs/team-plan.md).
-5. Віддалений репозиторій GitHub: налаштовано `origin -> https://github.com/DiXer-code/minesweeper-cicd.git`.
-6. Регулярні коміти кожного учасника: виконано.
-7. Розробка кожного учасника у своїй гілці: виконано (`feature/alex-improvements`).
-8. Злиття гілок і розв'язання конфліктів: виконується через pull request у main.
+This repository now includes the full CI/CD scope for the lab:
 
-## Покращення в цій версії
+- unit tests for the application with `pytest`;
+- code style checks with `flake8`;
+- local CI script for running tests and lint together;
+- `requirements.txt` with project and CI dependencies;
+- GitHub Actions workflow that runs on every push and pull request;
+- HTML reports for testing and linting as workflow artifacts.
 
-- Додано безпечний перший хід: міна не ставиться в першу відкриту клітинку.
-- Додано `R` для швидкого рестарту партії.
-- Додано статусний рядок з підказками та кількістю прапорців.
-- Додано базові автоматичні тести логіки поля.
-- Додано документацію для аналізу, проєктування і командної роботи.
-- Додано `.gitignore`, щоб не комітити `.venv` і кеші Python.
-- Додано type hints і `__repr__` до класу `Cell`.
-- Рефакторинг `Board`: виділено приватний метод `_iter_neighbors`.
-- Додано рівень складності `medium` (12×12, 20 мін).
-- Виправлено out-of-bounds при кліку на межі поля.
-- Назва вікна тепер відображає обраний рівень складності.
-- Розширено тести: тести `Cell`, `chord_cell`, `count_neighbor_flags`, `_iter_neighbors`.
-- CI розбито на два джоби: `lint` та `build`.
+## Project structure
 
-## Запуск
+- `src/` - game source code
+- `tests/` - automated tests
+- `.github/workflows/build.yml` - GitHub Actions pipeline
+- `scripts/run_ci.ps1` - local CI pipeline script
+- `.flake8` - flake8 configuration
+- `pytest.ini` - pytest configuration
+
+## Run the game
 
 ```powershell
-# Стандартний (normal)
 python -m src.main
-
-# З вибором складності
-python -m src.main --difficulty easy
-python -m src.main --difficulty medium
-python -m src.main --difficulty hard
 ```
 
-## Управління
-
-| Дія | Клавіша/кнопка |
-|-----|---------------|
-| Відкрити клітинку | Лівий клік |
-| Поставити прапорець | Правий клік |
-| Chording (авто-відкриття) | Подвійний лівий клік |
-| Рестарт | `R` |
-
-## Тести
+## Run tests
 
 ```powershell
-python -m unittest discover -s tests -v
+python -m pytest tests
 ```
+
+## Run lint
+
+```powershell
+python -m flake8 src tests --config=.flake8
+```
+
+## Run the local CI pipeline
+
+```powershell
+.\scripts\run_ci.ps1
+```
+
+The script generates local reports in:
+
+- `reports/pytest/report.html`
+- `reports/pytest/junit.xml`
+- `reports/flake8/index.html`
+- `reports/flake8/flake8.txt`
+
+## GitHub Actions
+
+The workflow automatically:
+
+1. installs dependencies from `requirements.txt`;
+2. runs `pytest`;
+3. runs `flake8`;
+4. generates HTML reports;
+5. uploads reports as workflow artifacts.
 
 ## Notes
-Minor improvements and cleanup.
+
+Generated files in `reports/` are ignored locally and should not be committed.
